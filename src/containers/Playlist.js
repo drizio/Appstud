@@ -1,16 +1,22 @@
 import React, {useEffect} from 'react'
-import {View, Text, FlatList} from 'react-native'
+import {View, Text, FlatList, StatusBar} from 'react-native'
 import {fetchApi, PLAYLIST_URL} from "../utils/"
 import {useAsync} from "../hooks/query"
 import {Loading, PlayListItem} from '../components/'
+import { connect } from 'react-redux'
+import { play, pause} from '../utils/store'
 
-export default function Playlist (props) {
+function PlayList ({play,pause, playing, currentTrack}) {
 
     const {data, status, error, run} = useAsync({status: 'idle'})
 
     useEffect(()=> {
         run(fetchApi(PLAYLIST_URL))
     }, [])
+
+    const toggle = (currentTrack) => {
+        playing ? pause() : play(currentTrack)
+    }
 
     const renderItem = ({ item }) => (
         <PlayListItem playlist={item} />
@@ -23,10 +29,10 @@ export default function Playlist (props) {
       } else if (status === 'rejected') {
         throw error
       } else if (status === 'resolved') {
-        return(<View style={{flex:1, backgroundColor: 'black',}}>
-            <Text style={{color: 'white', fontSize: 20}}>{data.message}</Text>
+        return(<View style={{flex:1, backgroundColor: 'black', justifyContent: 'center', padding: 10}}>
+            <StatusBar barStyle='dark-content' />
+            <Text style={{color: 'white', fontSize: 30, textAlign: 'left', fontWeight: 'bold', marginBottom: 15, marginLeft: 10}}>{data.message}</Text>
             <FlatList 
-                style={{borderColor: 'red', borderWidth: 3}}
                 data={data.playlists.items}
                 numColumns={2}
                 renderItem={renderItem}
@@ -35,3 +41,14 @@ export default function Playlist (props) {
         </View>)
       }
 }
+
+const mapStateToProps = ({sound, playing, currentTrack}) => ({
+   sound, playing,currentTrack
+})
+  
+
+
+export default connect(
+    mapStateToProps,
+    { play, pause}
+  )(PlayList)
